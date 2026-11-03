@@ -111,7 +111,14 @@ async function playTrack(id){
   for(let i=0;i<3&&(r.status===404||r.status===502||r.status===503);i++){
     await api('/me/player',{method:'PUT',body:JSON.stringify({device_ids:[dev.id],play:false})});
     await wait(1200+i*800);r=await go()}
-  if(!r.ok&&r.status!==204)throw new Error('play '+r.status)}
+  if(!r.ok&&r.status!==204)throw new Error('play '+r.status);
+  for(let i=0;i<3;i++){
+    await wait(1500);
+    const s=await api('/me/player');
+    if(s.status===200){const j=await s.json();if(j.is_playing&&j.item&&j.item.id===id)return}
+    await api('/me/player',{method:'PUT',body:JSON.stringify({device_ids:[dev.id],play:true})});
+    await wait(800);await go()}
+  throw new Error('stil')}
 async function pause(){try{await api('/me/player/pause',{method:'PUT'});msg('Gepauzeerd')}catch(e){}}
 
 async function start(id){
@@ -121,6 +128,7 @@ async function start(id){
     $('fix').hidden=false;
     if(e.message==='nodev')msg('Spotify is niet gevonden op dit toestel. Open Spotify (kort), kom terug en tik op Opnieuw proberen.');
     else if(e.message==='login'||/ 40[13]/.test(e.message))msg('Opnieuw inloggen is nodig (tandwiel rechtsboven).');
+    else if(e.message==='stil')msg('Spotify op je telefoon slaapt en start niet. Open Spotify even, speel kort een nummer, ga terug en tik op Opnieuw proberen.');
     else if(/ 404/.test(e.message))msg('Spotify reageert niet. Open Spotify, speel kort een nummer, ga terug en tik op Opnieuw proberen.');
     else msg('Afspelen lukte niet ('+e.message+').')}}
 
