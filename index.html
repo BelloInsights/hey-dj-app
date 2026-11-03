@@ -57,7 +57,7 @@ input[type=text]{width:100%;max-width:420px;font:1rem monospace;padding:12px;bor
 <div class="play">♪</div><div id="msg"></div><div id="dbg" style="color:#555;font-size:.8rem;margin:-10px 0 14px"></div>
 <button class="big" id="show">Toon liedje</button>
 <div class="row"><button class="g" id="pause">Pauze</button><button class="g" id="next">Volgend kaartje</button></div>
-<div class="row" id="fix" hidden><button class="g" id="spot">Open Spotify</button><button class="g" id="retry">Opnieuw proberen</button></div>
+<div class="row" id="fix" hidden><button class="g" id="spot">Start via Spotify-app</button><button class="g" id="retry">Opnieuw proberen</button></div>
 </section>
 
 <section class="scr" id="s-card"><div class="card" id="card"></div><div class="note" id="cnote"></div>
@@ -194,7 +194,7 @@ $('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;
   catch(err){alert('Dit bestand kan ik niet lezen.')}};
 $('show').onclick=showCard;$('pause').onclick=pause;$('pause2').onclick=pause;
 $('next').onclick=startScan;$('next2').onclick=startScan;
-$('retry').onclick=()=>start(cur);$('spot').onclick=()=>{location.href='spotify:'};
+$('retry').onclick=()=>start(cur);$('spot').onclick=()=>{location.href='spotify:track:'+cur+':play'};
 
 /* ---------- opstarten ---------- */
 (async()=>{
