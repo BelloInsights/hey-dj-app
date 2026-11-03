@@ -47,6 +47,7 @@ input[type=text]{width:100%;max-width:420px;font:1rem monospace;padding:12px;bor
 <label>Kaartgegevens uit de kaartjes-maker (JSON, knop “Exporteren voor de app”)</label>
 <div class="row"><button class="g" id="imp">Bestand kiezen…</button><span id="impn" style="align-self:center;color:#888"></span></div>
 <input type="file" id="file" accept=".json,application/json" hidden>
+<label class="chk" style="display:flex;gap:10px;align-items:center;color:#ddd"><input type="checkbox" id="mode" style="width:22px;height:22px"> Liedjes altijd via de Spotify-app starten (aanrader als afspelen op de achtergrond niet lukt)</label>
 <label>Afspeeltoestel</label><div class="row"><button class="g" id="devpick">Toestel kiezen…</button><span id="devn" style="align-self:center;color:#888"></span></div><div id="devl" class="row"></div>
 <div class="row"><button class="g" id="back">Terug</button><button class="g" id="out">Uitloggen</button></div>
 </div></section>
@@ -129,7 +130,9 @@ async function pause(){try{await api('/me/player/pause',{method:'PUT'});msg('Gep
 
 function dbg(){$('dbg').textContent=DBG?'Spotify meldt: speelt='+(DBG.playing?'ja':'nee')+', toestel='+(DBG.dev||'?')+', juist liedje='+(DBG.ok?'ja':'nee'):''}
 async function start(id){
-  cur=id;DBG=null;$('dbg').textContent='';show('s-play');$('fix').hidden=true;$('show').disabled=false;msg('Liedje wordt gestart…');
+  cur=id;DBG=null;$('dbg').textContent='';show('s-play');$('fix').hidden=true;$('show').disabled=false;
+  if(LS('mode')==='app'){msg('Spotify opent even. Ga daarna terug naar Hey DJ (terugknop of veeg) en tik op Toon liedje.');$('fix').hidden=false;setTimeout(()=>{location.href='spotify:track:'+id+':play'},400);return}
+  msg('Liedje wordt gestart…');
   try{const dv=await playTrack(id);msg('Luister goed… (speelt af op: '+dv.name+')');dbg()}
   catch(e){
     $('fix').hidden=false;dbg();
@@ -180,6 +183,7 @@ function stopScan(){scanning=false;if(stream){stream.getTracks().forEach(t=>t.st
 
 /* ---------- instellingen ---------- */
 function openSet(){stopScan();$('redir').textContent=REDIR;$('cid').value=LS('cid')||'';$('devn').textContent=LS('devname')||'automatisch (telefoon)';$('impn').textContent=Object.keys(CARDS).length?Object.keys(CARDS).length+' kaartjes geladen':'';show('s-set')}
+$('mode').checked=LS('mode')==='app';$('mode').onchange=e=>SET('mode',e.target.checked?'app':null);
 $('gear').onclick=openSet;
 $('cp').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(REDIR);$('cp').textContent='gekopieerd'};
 $('login').onclick=login;
