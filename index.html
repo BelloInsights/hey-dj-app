@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000"><title>Hey DJ</title>
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#000;color:#eee;font:16px/1.45 system-ui,sans-serif;overflow:hidden}
+.scr{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;overflow:auto}
+.scr.on{display:flex}
+button{font:600 1.1rem system-ui;border:0;border-radius:16px;padding:16px 28px;background:#c0392b;color:#fff;cursor:pointer}
+button.g{background:#222;color:#ddd;font-weight:500;font-size:1rem;padding:12px 20px}
+button.big{font-size:1.5rem;padding:22px 44px;border-radius:22px}
+button:disabled{opacity:.4}
+.gear{position:fixed;top:max(10px,env(safe-area-inset-top));right:12px;z-index:5;background:none;color:#555;font-size:1.6rem;padding:8px 12px}
+input[type=text]{width:100%;max-width:420px;font:1rem monospace;padding:12px;border-radius:10px;border:1px solid #444;background:#111;color:#fff}
+.set{max-width:460px;text-align:left;width:100%}.set h1{text-align:center;color:#ffe49a;font-family:Georgia,serif}
+.set ol{padding-left:20px;color:#bbb}.set code{background:#1a1a1a;padding:2px 6px;border-radius:6px;word-break:break-all;color:#ffe49a}
+.set label{display:block;margin:16px 0 6px;color:#999;font-size:.9rem}.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+#vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
+.frame{position:relative;width:min(66vw,300px);aspect-ratio:1;border:3px solid #ffe49a;border-radius:18px;box-shadow:0 0 0 100vmax rgba(0,0,0,.6)}
+#hint{position:absolute;bottom:12vh;left:0;right:0;color:#ddd;text-shadow:0 1px 4px #000}
+#msg{min-height:1.5em;color:#999;margin:18px 0;max-width:340px}
+.card{position:relative;width:min(88vw,62vh,420px);aspect-ratio:1;border-radius:4%;padding:7% 6%;display:flex;flex-direction:column;align-items:center;color:#fff;font-family:Georgia,serif;
+ background:radial-gradient(circle at 50% 35%,#e04a4f 0,#b3202b 55%,#7c0f1b 100%);box-shadow:0 10px 40px rgba(0,0,0,.6)}
+.card::before{content:"";position:absolute;inset:3%;border:1px solid #ffe49a;border-radius:3%;opacity:.8}
+.card .ar{height:21%;display:flex;align-items:flex-end;justify-content:center;font-size:clamp(14px,5vw,22px);font-weight:700;line-height:1.15;overflow:hidden}
+.card .yr{height:22%;display:flex;align-items:center;font-size:clamp(46px,17vw,84px);font-weight:700;color:#ffe49a;text-shadow:0 2px 4px rgba(0,0,0,.4);line-height:1}
+.card .ti{height:20%;font-style:italic;font-size:clamp(13px,4.4vw,20px);line-height:1.15;overflow:hidden}
+.card .act{position:absolute;left:50%;bottom:7%;transform:translateX(-50%);width:84%;height:15%;background:rgba(0,0,0,.28);border-radius:99px;display:flex;align-items:center;gap:3%;padding:0 3%;color:#ffe49a;font-weight:700;font-size:clamp(12px,4vw,18px)}
+.card .act .ic{flex:none;height:78%;aspect-ratio:1;border-radius:50%;background:#fff;color:#111;display:flex;align-items:center;justify-content:center}
+.card .act .ic svg{width:70%;height:70%}.card .act .al{flex:1;text-align:center}
+.note{margin-top:12px;color:#777;font-size:.85rem}
+.play{font-size:4rem;opacity:.25;margin-bottom:28px}
+</style></head><body>
+<button class="gear" id="gear" aria-label="Instellingen">⚙</button>
+
+<section class="scr" id="s-set"><div class="set">
+<h1>Hey DJ instellen</h1>
+<p>Eenmalig instellen, hierna werkt alles met één tik. Je hebt Spotify Premium nodig.</p>
+<ol>
+<li>Ga op <code>developer.spotify.com/dashboard</code> naar <b>Create app</b> (kies bij API: <i>Web API</i>).</li>
+<li>Zet bij <b>Redirect URI</b> precies dit adres: <code id="redir"></code> <button class="g" id="cp" style="padding:4px 10px;font-size:.85rem">kopieer</button></li>
+<li>Plak hieronder de <b>Client ID</b> van die app.</li></ol>
+<label for="cid">Client ID</label><input type="text" id="cid" autocomplete="off" autocapitalize="off" spellcheck="false">
+<div class="row"><button id="login">Inloggen met Spotify</button></div>
+<label>Kaartgegevens uit de kaartjes-maker (JSON, knop “Exporteren voor de app”)</label>
+<div class="row"><button class="g" id="imp">Bestand kiezen…</button><span id="impn" style="align-self:center;color:#888"></span></div>
+<input type="file" id="file" accept=".json,application/json" hidden>
+<div class="row"><button class="g" id="back">Terug</button><button class="g" id="out">Uitloggen</button></div>
+</div></section>
+
+<section class="scr" id="s-scan"><video id="vid" playsinline muted></video><div class="frame"></div><div id="hint">Houd de QR-code van het kaartje in het kader</div></section>
+
+<section class="scr" id="s-play">
+<div class="play">♪</div><div id="msg"></div>
+<button class="big" id="show">Toon liedje</button>
+<div class="row"><button class="g" id="pause">Pauze</button><button class="g" id="next">Volgend kaartje</button></div>
+<div class="row" id="fix" hidden><button class="g" id="spot">Open Spotify</button><button class="g" id="retry">Opnieuw proberen</button></div>
+</section>
+
+<section class="scr" id="s-card"><div class="card" id="card"></div><div class="note" id="cnote"></div>
+<div class="row"><button class="g" id="pause2">Pauze</button><button id="next2">Volgend kaartje</button></div></section>
+
+<script>
+const $=id=>document.getElementById(id);
+const LS=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+const SET=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}};
+const REDIR=location.origin+location.pathname;
+const G='<rect x="4" y="11" width="16" height="9" rx="1"/><rect x="3" y="8" width="18" height="3" rx="1"/><path d="M12 8v12"/><path d="M12 8c-3 0-4-3-2-3.5 2-.5 2 1.5 2 3.5zM12 8c3 0 4-3 2-3.5-2-.5-2 1.5-2 3.5z"/>';
+const ACT={
+ geen:{l:'Pak geen cadeau',s:'<g>'+G+'</g><circle cx="12" cy="12" r="10.5" stroke="#c0392b" stroke-width="2"/><path d="M4.6 19.4L19.4 4.6" stroke="#c0392b" stroke-width="2"/>'},
+ ruil:{l:'Ruil cadeau',s:'<g transform="translate(-1.5 -3) scale(.78)">'+G+'</g><path d="M10 16h11M18 13.2l3 2.8-3 2.8"/><path d="M21 21H10M13 18.2L10 21l3 2.8"/>'},
+ zonder:{l:'Pak cadeau zonder naam',s:G+'<circle cx="12" cy="15.5" r="3.8" fill="#fff" stroke="none"/><text x="12" y="18.4" font-size="8.5" font-weight="700" text-anchor="middle" fill="currentColor" stroke="none" font-family="Georgia,serif">?</text>'},
+ door:{l:'Geef cadeau door',s:'<g transform="translate(-1.5 -3) scale(.78)">'+G+'</g><path d="M11 19.5h10M17.5 16l3.5 3.5-3.5 3.5"/>'},
+ met:{l:'Pak cadeau met naam',s:G+'<rect x="12.5" y="14" width="10.5" height="7.5" rx="1.3" fill="#fff"/><path d="M14.7 17.2h6M14.7 19.4h4"/>'}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let CARDS={};try{CARDS=JSON.parse(LS('cards')||'{}')}catch(e){}
+let cur=null,stream=null,scanning=false,wake=null;
+
+function show(id){document.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.id===id));$('gear').style.display=id==='s-set'?'none':'block'}
+function msg(t){$('msg').textContent=t||''}
+
+/* ---------- Spotify inloggen (PKCE) ---------- */
+const b64=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+async function login(){
+  const cid=$('cid').value.trim();if(!cid){alert('Vul eerst je Client ID in.');return}
+  SET('cid',cid);const v=b64(crypto.getRandomValues(new Uint8Array(48)));SET('ver',v);
+  const ch=b64(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v)));
+  location.href='https://accounts.spotify.com/authorize?'+new URLSearchParams({client_id:cid,response_type:'code',redirect_uri:REDIR,code_challenge_method:'S256',code_challenge:ch,scope:'user-read-playback-state user-modify-playback-state'})}
+async function tokenReq(body){
+  const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:LS('cid'),...body})});
+  if(!r.ok)throw new Error('token '+r.status);const j=await r.json();
+  SET('at',j.access_token);SET('exp',String(Date.now()+j.expires_in*1000-30000));if(j.refresh_token)SET('rt',j.refresh_token)}
+async function refresh(){await tokenReq({grant_type:'refresh_token',refresh_token:LS('rt')})}
+async function api(path,o={}){
+  if(!LS('at'))throw new Error('login');
+  if(Date.now()>+LS('exp')&&LS('rt'))await refresh();
+  const go=()=>fetch('https://api.spotify.com/v1'+path,{...o,headers:{Authorization:'Bearer '+LS('at'),'Content-Type':'application/json'}});
+  let r=await go();if(r.status===401&&LS('rt')){await refresh();r=await go()}return r}
+
+/* ---------- afspelen ---------- */
+async function playTrack(id){
+  let r=await api('/me/player/devices');if(!r.ok)throw new Error('dev '+r.status);
+  const d=(await r.json()).devices||[];
+  const dev=d.find(x=>x.is_active)||d.find(x=>x.type==='Smartphone')||d[0];
+  if(!dev)throw new Error('nodev');
+  r=await api('/me/player/play?device_id='+encodeURIComponent(dev.id),{method:'PUT',body:JSON.stringify({uris:['spotify:track:'+id]})});
+  if(!r.ok&&r.status!==204)throw new Error('play '+r.status)}
+async function pause(){try{await api('/me/player/pause',{method:'PUT'});msg('Gepauzeerd')}catch(e){}}
+
+async function start(id){
+  cur=id;show('s-play');$('fix').hidden=true;$('show').disabled=false;msg('Liedje wordt gestart…');
+  try{await playTrack(id);msg('Luister goed…')}
+  catch(e){
+    $('fix').hidden=false;
+    if(e.message==='nodev')msg('Spotify is niet gevonden op dit toestel. Open Spotify (kort), kom terug en tik op Opnieuw proberen.');
+    else if(e.message==='login'||/ 40[13]/.test(e.message))msg('Opnieuw inloggen is nodig (tandwiel rechtsboven).');
+    else msg('Afspelen lukte niet ('+e.message+').')}}
+
+/* ---------- kaartje tonen ---------- */
+async function showCard(){
+  let c=CARDS[cur],note='';
+  if(!c){
+    try{const r=await api('/tracks/'+cur);const t=await r.json();
+      c={artist:t.artists.map(a=>a.name).join(', '),title:t.name,year:(t.album.release_date||'').slice(0,4)};
+      note='Gegevens van Spotify, het jaar kan van de heruitgave zijn.'}
+    catch(e){c={artist:'Onbekend',title:'Kon gegevens niet ophalen',year:'?'}}}
+  const a=c.act&&ACT[c.act];
+  $('card').innerHTML=`<div class="ar"><span>${esc(c.artist)}</span></div><div class="yr">${esc(c.year)}</div><div class="ti"><span>${esc(c.title)}</span></div>`+
+    (a?`<div class="act"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${a.s}</svg></span><span class="al">${esc(a.l)}</span></div>`:'');
+  $('cnote').textContent=note;show('s-card')}
+
+/* ---------- scannen ---------- */
+const parse=t=>{const m=/(?:spotify:track:|open\.spotify\.com\/(?:intl-[a-z]+\/)?track\/)([A-Za-z0-9]{22})/.exec(t||'');return m&&m[1]};
+function loadJsQR(){return window.jsQR?Promise.resolve():new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s)})}
+async function startScan(){
+  show('s-scan');scanning=true;$('hint').textContent='Houd de QR-code van het kaartje in het kader';
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+    const v=$('vid');v.srcObject=stream;await v.play();
+    try{wake=await navigator.wakeLock?.request('screen')}catch(e){}
+    let det=null;if('BarcodeDetector' in window){try{det=new BarcodeDetector({formats:['qr_code']})}catch(e){}}
+    if(!det)await loadJsQR();
+    const cv=document.createElement('canvas'),cx=cv.getContext('2d',{willReadFrequently:true});
+    const loop=async()=>{
+      if(!scanning)return;
+      try{let txt=null;
+        if(det){const r=await det.detect(v);if(r[0])txt=r[0].rawValue}
+        else if(v.videoWidth){const w=Math.min(640,v.videoWidth),h=Math.round(w*v.videoHeight/v.videoWidth);cv.width=w;cv.height=h;cx.drawImage(v,0,0,w,h);
+          const q=jsQR(cx.getImageData(0,0,w,h).data,w,h);if(q)txt=q.data}
+        const id=parse(txt);
+        if(id){stopScan();navigator.vibrate&&navigator.vibrate(60);start(id);return}
+        if(txt)$('hint').textContent='Dit is geen Spotify-kaartje'}catch(e){}
+      setTimeout(loop,150)};
+    loop()}
+  catch(e){$('hint').textContent='Geen toegang tot de camera. Geef toestemming en probeer opnieuw.'}}
+function stopScan(){scanning=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}try{wake&&wake.release()}catch(e){}wake=null}
+
+/* ---------- instellingen ---------- */
+function openSet(){stopScan();$('redir').textContent=REDIR;$('cid').value=LS('cid')||'';$('impn').textContent=Object.keys(CARDS).length?Object.keys(CARDS).length+' kaartjes geladen':'';show('s-set')}
+$('gear').onclick=openSet;
+$('cp').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(REDIR);$('cp').textContent='gekopieerd'};
+$('login').onclick=login;
+$('back').onclick=()=>LS('at')?startScan():alert('Log eerst in met Spotify.');
+$('out').onclick=()=>{['at','rt','exp'].forEach(k=>SET(k,null));alert('Uitgelogd.')};
+$('imp').onclick=()=>$('file').click();
+$('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;
+  try{const j=JSON.parse(await f.text());CARDS=j.cards||j;SET('cards',JSON.stringify(CARDS));$('impn').textContent=Object.keys(CARDS).length+' kaartjes geladen'}
+  catch(err){alert('Dit bestand kan ik niet lezen.')}};
+$('show').onclick=showCard;$('pause').onclick=pause;$('pause2').onclick=pause;
+$('next').onclick=startScan;$('next2').onclick=startScan;
+$('retry').onclick=()=>start(cur);$('spot').onclick=()=>{location.href='spotify:'};
+
+/* ---------- opstarten ---------- */
+(async()=>{
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  const p=new URLSearchParams(location.search);
+  if(p.get('code')){
+    try{await tokenReq({grant_type:'authorization_code',code:p.get('code'),redirect_uri:REDIR,code_verifier:LS('ver')})}
+    catch(e){history.replaceState(null,'',REDIR);openSet();alert('Inloggen mislukt. Controleer de Client ID en de Redirect URI.');return}
+    history.replaceState(null,'',REDIR)}
+  else if(p.get('error')){history.replaceState(null,'',REDIR);openSet();alert('Inloggen geannuleerd of geweigerd.');return}
+  LS('at')&&LS('cid')?startScan():openSet()})();
+</script></body></html>
