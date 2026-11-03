@@ -54,7 +54,7 @@ input[type=text]{width:100%;max-width:420px;font:1rem monospace;padding:12px;bor
 <section class="scr" id="s-scan"><video id="vid" playsinline muted></video><div class="frame"></div><div id="hint">Houd de QR-code van het kaartje in het kader</div></section>
 
 <section class="scr" id="s-play">
-<div class="play">♪</div><div id="msg"></div>
+<div class="play">♪</div><div id="msg"></div><div id="dbg" style="color:#555;font-size:.8rem;margin:-10px 0 14px"></div>
 <button class="big" id="show">Toon liedje</button>
 <div class="row"><button class="g" id="pause">Pauze</button><button class="g" id="next">Volgend kaartje</button></div>
 <div class="row" id="fix" hidden><button class="g" id="spot">Open Spotify</button><button class="g" id="retry">Opnieuw proberen</button></div>
@@ -101,7 +101,7 @@ async function api(path,o={}){
   let r=await go();if(r.status===401&&LS('rt')){await refresh();r=await go()}return r}
 
 /* ---------- afspelen ---------- */
-const wait=ms=>new Promise(r=>setTimeout(r,ms));
+let DBG=null;const wait=ms=>new Promise(r=>setTimeout(r,ms));
 async function playTrack(id){
   let r=await api('/me/player/devices');if(!r.ok)throw new Error('dev '+r.status);
   const d=(await r.json()).devices||[];
@@ -114,20 +114,23 @@ async function playTrack(id){
     await api('/me/player',{method:'PUT',body:JSON.stringify({device_ids:[dev.id],play:false})});
     await wait(1200+i*800);r=await go()}
   if(!r.ok&&r.status!==204)throw new Error('play '+r.status);
-  for(let i=0;i<3;i++){
-    await wait(1500);
+  let st=null;
+  for(let i=0;i<5;i++){
+    await wait(1300);
     const s=await api('/me/player');
-    if(s.status===200){const j=await s.json();if(j.is_playing&&j.item&&j.item.id===id)return dev}
-    await api('/me/player',{method:'PUT',body:JSON.stringify({device_ids:[dev.id],play:true})});
-    await wait(800);await go()}
+    if(s.status===200){const j=await s.json();st={playing:!!j.is_playing,dev:j.device&&j.device.name,ok:!!(j.item&&j.item.id===id)};
+      if(st.playing){DBG=st;return dev}}
+    if(i===2){await api('/me/player',{method:'PUT',body:JSON.stringify({device_ids:[dev.id],play:true})});await wait(800);await go()}}
+  DBG=st;
   throw new Error('stil')}
 async function pause(){try{await api('/me/player/pause',{method:'PUT'});msg('Gepauzeerd')}catch(e){}}
 
+function dbg(){$('dbg').textContent=DBG?'Spotify meldt: speelt='+(DBG.playing?'ja':'nee')+', toestel='+(DBG.dev||'?')+', juist liedje='+(DBG.ok?'ja':'nee'):''}
 async function start(id){
-  cur=id;show('s-play');$('fix').hidden=true;$('show').disabled=false;msg('Liedje wordt gestart…');
-  try{const dv=await playTrack(id);msg('Luister goed… (speelt af op: '+dv.name+')')}
+  cur=id;DBG=null;$('dbg').textContent='';show('s-play');$('fix').hidden=true;$('show').disabled=false;msg('Liedje wordt gestart…');
+  try{const dv=await playTrack(id);msg('Luister goed… (speelt af op: '+dv.name+')');dbg()}
   catch(e){
-    $('fix').hidden=false;
+    $('fix').hidden=false;dbg();
     if(e.message==='nodev')msg('Spotify is niet gevonden op dit toestel. Open Spotify (kort), kom terug en tik op Opnieuw proberen.');
     else if(e.message==='login'||/ 40[13]/.test(e.message))msg('Opnieuw inloggen is nodig (tandwiel rechtsboven).');
     else if(e.message==='stil')msg('Spotify op je telefoon slaapt en start niet. Open Spotify even, speel kort een nummer, ga terug en tik op Opnieuw proberen.');
