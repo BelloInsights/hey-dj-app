@@ -39,19 +39,19 @@ input[type=text]{width:100%;max-width:420px;font:1rem monospace;padding:12px;bor
 body.xmas{background:radial-gradient(circle at 50% 45%,#4a2226 0,#2a1215 55%,#160a0c 100%) fixed}
 #gar,#snow{display:none}
 body.xmas{background:radial-gradient(circle at 50% 45%,#3b1a1c 0,#1c0c0f 55%,#0c0507 100%) fixed}
-body.xmas #gar{display:block;position:fixed;top:0;left:0;right:0;height:min(16vw,90px);z-index:4;pointer-events:none}
+body.xmas #gar{display:block;position:fixed;top:calc(max(env(safe-area-inset-top,0px),26px) + 14px);left:0;right:0;height:min(16vw,90px);z-index:4;pointer-events:none}
 body.xmas #gar svg{width:100%;height:100%}
 body.xmas #snow{display:block;position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 #snow i{position:absolute;top:-10px;width:5px;height:5px;border-radius:50%;background:#fff;opacity:.55;animation:fall linear infinite}
 @keyframes fall{to{transform:translateY(110vh) translateX(30px)}}
 @media (prefers-reduced-motion:reduce){#snow i{animation:none;display:none}}
-body.xmas .gear{color:#ffd78a;top:max(64px,calc(env(safe-area-inset-top) + 56px))}
+body.xmas .gear{color:#ffd78a;top:calc(max(env(safe-area-inset-top,0px),26px) + min(16vw,90px) + 10px)}
 body.xmas button{background:linear-gradient(#c62828,#8e1b1b);border:1px solid #e9c46a;box-shadow:0 0 14px rgba(255,170,60,.25)}
 body.xmas button.g{background:rgba(255,255,255,.07);color:#ffd78a;border:1px solid rgba(255,215,138,.35);box-shadow:none}
 body.xmas .gear{background:none;border:0;box-shadow:none}
 body.xmas .play{opacity:.9;color:#ffd78a;text-shadow:0 0 18px rgba(255,170,60,.7)}
 body.xmas #msg{color:#e8d3b0}body.xmas #msg.l{color:#ffd78a;text-shadow:0 0 14px rgba(255,170,60,.45)}
-body.xmas .scr{padding-top:max(20px,min(16vw,90px))}
+body.xmas .scr{padding-top:calc(max(env(safe-area-inset-top,0px),26px) + min(16vw,90px) + 10px)}
 body.xmas #s-scan{padding-top:20px}
 body.xmas .set input[type=text],body.xmas .set select{background:#1a0d0f!important;border-color:#5a3a2a!important}
 </style></head><body>
@@ -68,7 +68,7 @@ body.xmas .set input[type=text],body.xmas .set select{background:#1a0d0f!importa
 <label for="cid">Client ID</label><input type="text" id="cid" autocomplete="off" autocapitalize="off" spellcheck="false">
 <div class="row"><button id="login">Inloggen met Spotify</button></div>
 <label>Kaartgegevens uit de kaartjes-maker (JSON, knop “Exporteren voor de app”)</label>
-<div class="row"><button class="g" id="imp">Bestand kiezen…</button><span id="impn" style="align-self:center;color:#888"></span></div>
+<div class="row"><button class="g" id="imp">Bestand kiezen…</button><button class="g" id="impx">Alle kaartgegevens wissen</button><span id="impn" style="align-self:center;color:#888"></span></div>
 <input type="file" id="file" accept=".json,application/json" hidden>
 <label for="pm">Hoe speelt Hey DJ de liedjes af?</label>
 <select id="pm" style="width:100%;max-width:420px;font:1rem system-ui;padding:12px;border-radius:10px;border:1px solid #444;background:#111;color:#fff">
@@ -302,8 +302,9 @@ $('devpick').onclick=async()=>{
     d.forEach(x=>{const b=document.createElement('button');b.className='g';b.textContent=x.name+' ('+x.type+')';b.onclick=()=>{SET('dev',x.id);SET('devname',x.name);$('devn').textContent=x.name;l.innerHTML=''};l.appendChild(b)})}
   catch(e){alert('Eerst inloggen met Spotify.')}};
 $('imp').onclick=()=>$('file').click();
+$('impx').onclick=()=>{CARDS={};SET('cards',null);$('impn').textContent='Geen kaartgegevens geladen'};
 $('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;
-  try{const j=JSON.parse(await f.text());CARDS=j.cards||j;SET('cards',JSON.stringify(CARDS));$('impn').textContent=Object.keys(CARDS).length+' kaartjes geladen'}
+  try{const j=JSON.parse(await f.text()),nw=j.cards||j,n=Object.keys(nw).length;CARDS={...CARDS,...nw};SET('cards',JSON.stringify(CARDS));$('impn').textContent=n+' kaartjes toegevoegd of bijgewerkt, '+Object.keys(CARDS).length+' in totaal'}
   catch(err){alert('Dit bestand kan ik niet lezen.')}};
 $('show').onclick=()=>{full();showCard()};$('pause').onclick=pause;$('pause2').onclick=pause;
 function stopPlay(){try{if(MODE()==='web'){if(WP)WP.pause().catch(()=>{})}else if(MODE()==='remote')api('/me/player/pause',{method:'PUT'}).catch(()=>{})}catch(e){}}
