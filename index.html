@@ -6,7 +6,7 @@
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:#000;color:#eee;font:16px/1.45 system-ui,sans-serif;overflow:hidden}
-.scr{position:fixed;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;overflow:auto}
+.scr{position:fixed;inset:0;z-index:1;display:none;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;overflow:auto}
 .scr.on{display:flex}
 button{font:600 1.1rem system-ui;border:0;border-radius:16px;padding:16px 28px;background:#c0392b;color:#fff;cursor:pointer}
 button.g{background:#222;color:#ddd;font-weight:500;font-size:1rem;padding:12px 20px}
@@ -19,20 +19,39 @@ input[type=text]{width:100%;max-width:420px;font:1rem monospace;padding:12px;bor
 .set label{display:block;margin:16px 0 6px;color:#999;font-size:.9rem}.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
 #vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
 .frame{position:relative;width:min(66vw,300px);aspect-ratio:1;border:3px solid #ffe49a;border-radius:18px;box-shadow:0 0 0 100vmax rgba(0,0,0,.6)}
-#s-go{text-align:center}#hint{position:absolute;bottom:12vh;left:0;right:0;color:#ddd;text-shadow:0 1px 4px #000}
+#s-go{text-align:center}#s-set{justify-content:flex-start}#hint{position:absolute;bottom:12vh;left:0;right:0;color:#ddd;text-shadow:0 1px 4px #000}
 #msg{min-height:1.5em;color:#999;margin:18px 0;max-width:340px}
 .card{position:relative;width:min(88vw,62vh,420px);aspect-ratio:1;border-radius:4%;padding:7% 6%;display:flex;flex-direction:column;align-items:center;color:#fff;font-family:Georgia,serif;
- background:radial-gradient(circle at 50% 35%,#e04a4f 0,#b3202b 55%,#7c0f1b 100%);box-shadow:0 10px 40px rgba(0,0,0,.6)}
-.card::before{content:"";position:absolute;inset:3%;border:1px solid #ffe49a;border-radius:3%;opacity:.8}
-.card .ar{height:21%;display:flex;align-items:flex-end;justify-content:center;font-size:clamp(14px,5vw,22px);font-weight:700;line-height:1.15;overflow:hidden}
-.card .yr{height:22%;display:flex;align-items:center;font-size:clamp(46px,17vw,84px);font-weight:700;color:#ffe49a;text-shadow:0 2px 4px rgba(0,0,0,.4);line-height:1}
+ background:radial-gradient(circle at 50% 42%,#3b1a1c 0,#1c0c0f 58%,#0c0507 100%);box-shadow:0 10px 40px rgba(0,0,0,.6),0 0 0 1px rgba(255,215,138,.15);overflow:hidden}
+.card>svg.deco{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.card>div{position:relative;z-index:1}
+.card .ar{margin-top:6%;height:19%;display:flex;align-items:flex-end;justify-content:center;font-size:clamp(14px,5vw,22px);font-weight:700;line-height:1.15;overflow:hidden}
+.card .yr{height:22%;display:flex;align-items:center;font-size:clamp(46px,17vw,84px);font-weight:700;color:#ffd78a;text-shadow:0 0 14px rgba(255,170,60,.55),0 2px 0 rgba(0,0,0,.5);line-height:1}
 .card .ti{height:20%;font-style:italic;font-size:clamp(13px,4.4vw,20px);line-height:1.15;overflow:hidden}
-.card .act{position:absolute;left:50%;bottom:7%;transform:translateX(-50%);width:84%;height:15%;background:rgba(0,0,0,.28);border-radius:99px;display:flex;align-items:center;gap:3%;padding:0 3%;color:#ffe49a;font-weight:700;font-size:clamp(12px,4vw,18px)}
+.card .act{position:absolute!important;left:50%;bottom:7%;transform:translateX(-50%);width:84%;height:15%;background:rgba(255,255,255,.08);border:1px solid rgba(255,215,138,.35);border-radius:99px;display:flex;align-items:center;gap:3%;padding:0 3%;color:#ffe49a;font-weight:700;font-size:clamp(12px,4vw,18px)}
 .card .act .ic{flex:none;height:78%;aspect-ratio:1;border-radius:50%;background:#fff;color:#111;display:flex;align-items:center;justify-content:center}
 .card .act .ic svg{width:70%;height:70%}.card .act .al{flex:1;text-align:center}
 .note{margin-top:12px;color:#777;font-size:.85rem}
 .play{font-size:4rem;opacity:.25;margin-bottom:28px}
+#gar,#snow{display:none}
+body.xmas{background:radial-gradient(circle at 50% 45%,#3b1a1c 0,#1c0c0f 55%,#0c0507 100%) fixed}
+body.xmas #gar{display:block;position:fixed;top:0;left:0;right:0;height:min(16vw,90px);z-index:4;pointer-events:none}
+body.xmas #gar svg{width:100%;height:100%}
+body.xmas #snow{display:block;position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#snow i{position:absolute;top:-10px;width:5px;height:5px;border-radius:50%;background:#fff;opacity:.55;animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(110vh) translateX(30px)}}
+@media (prefers-reduced-motion:reduce){#snow i{animation:none;display:none}}
+body.xmas .gear{color:#ffd78a;top:max(64px,calc(env(safe-area-inset-top) + 56px))}
+body.xmas button{background:linear-gradient(#c62828,#8e1b1b);border:1px solid #e9c46a;box-shadow:0 0 14px rgba(255,170,60,.25)}
+body.xmas button.g{background:rgba(255,255,255,.07);color:#ffd78a;border:1px solid rgba(255,215,138,.35);box-shadow:none}
+body.xmas .gear{background:none;border:0;box-shadow:none}
+body.xmas .play{opacity:.9;color:#ffd78a;text-shadow:0 0 18px rgba(255,170,60,.7)}
+body.xmas #msg{color:#e8d3b0}
+body.xmas .scr{padding-top:max(20px,min(16vw,90px))}
+body.xmas #s-scan{padding-top:20px}
+body.xmas .set input[type=text],body.xmas .set select{background:#1a0d0f!important;border-color:#5a3a2a!important}
 </style></head><body>
+<div id="gar" aria-hidden="true"></div><div id="snow" aria-hidden="true"></div>
 <button class="gear" id="gear" aria-label="Instellingen">⚙</button>
 
 <section class="scr" id="s-set"><div class="set">
@@ -53,6 +72,8 @@ input[type=text]{width:100%;max-width:420px;font:1rem monospace;padding:12px;bor
 <option value="remote">Spotify-app op de achtergrond bedienen</option>
 <option value="app">Via de Spotify-app starten (Spotify komt even in beeld)</option></select>
 <div id="pmh" style="color:#999;font-size:.9rem;margin-top:6px"></div>
+<label for="th">Thema</label>
+<select id="th" style="width:100%;max-width:420px;font:1rem system-ui;padding:12px;border-radius:10px;border:1px solid #444;background:#111;color:#fff"><option value="zwart">Zwart</option><option value="kerst">Kerst (slinger met lichtjes en sneeuw)</option></select>
 <div id="devw"><label>Afspeeltoestel</label><div class="row"><button class="g" id="devpick">Toestel kiezen…</button><span id="devn" style="align-self:center;color:#888"></span></div><div id="devl" class="row"></div></div>
 <div class="row"><button class="g" id="back">Terug</button><button class="g" id="out">Uitloggen</button></div>
 </div></section>
@@ -181,6 +202,47 @@ async function start(id){
     else msg('Afspelen lukte niet ('+e.message+').')}}
 
 /* ---------- kaartje tonen ---------- */
+/* ---------- ontwerp 5: kerstslinger ---------- */
+const G5=`<defs><filter id="g5glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation=".9"/></filter><filter id="g5soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.8"/></filter>
+<radialGradient id="g5r" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#ff8a80"/><stop offset=".45" stop-color="#c62828"/><stop offset="1" stop-color="#5a0d0d"/></radialGradient>
+<radialGradient id="g5g" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#9be7a6"/><stop offset=".45" stop-color="#2e7d32"/><stop offset="1" stop-color="#0d3311"/></radialGradient>
+<radialGradient id="g5y" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#fff2b3"/><stop offset=".45" stop-color="#d4a017"/><stop offset="1" stop-color="#6b4c06"/></radialGradient>
+<linearGradient id="g5b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ef5350"/><stop offset=".55" stop-color="#c62828"/><stop offset="1" stop-color="#7f1515"/></linearGradient>
+<radialGradient id="g5v" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#2a2a2a"/><stop offset=".8" stop-color="#111"/><stop offset="1" stop-color="#000"/></radialGradient></defs>`;
+function g5rng(n){let r=(n*9973+777)%233280;return()=>{r=(r*9301+49297)%233280;return r/233280}}
+/* punten langs een vierkant pad (inset a), met stap st */
+function g5path(a,st){const p=[],L=60-2*a;for(let d=0;d<4*L;d+=st){const side=Math.floor(d/L),t=d%L;
+  p.push(side===0?[a+t,a]:side===1?[60-a,a+t]:side===2?[60-a-t,60-a]:[a,60-a-t])}return p}
+function g5pine(pts,rnd,w){const col=['#163a22','#1f4d2b','#2a6337','#3c7d45','#0f2a18'],d=col.map(()=>'');
+  pts.forEach(([x,y])=>{for(let j=0;j<5;j++){const a=rnd()*Math.PI*2,l=w*(.45+rnd()*.6),o=(rnd()-.5)*w*.9;const cx=x+o*Math.cos(a+1.57),cy=y+o*Math.sin(a+1.57);
+    const k=Math.floor(rnd()*col.length);d[k]+=`M${cx.toFixed(2)} ${cy.toFixed(2)}l${(Math.cos(a)*l).toFixed(2)} ${(Math.sin(a)*l).toFixed(2)}`}});
+  return col.map((c,k)=>`<path d="${d[k]}" stroke="${c}" stroke-width=".42" stroke-linecap="round" fill="none"/>`).join('')}
+function g5lights(pts,rnd,r){let glow='',core='';pts.forEach(([x,y])=>{const dx=(rnd()-.5)*3,dy=(rnd()-.5)*3,X=(x+dx).toFixed(2),Y=(y+dy).toFixed(2),warm=rnd()<.8?'#ffb347':'#ff7043';
+  glow+=`<circle cx="${X}" cy="${Y}" r="${(r*2.6).toFixed(2)}" fill="${warm}"/>`;core+=`<circle cx="${X}" cy="${Y}" r="${r}" fill="#fff6d6"/>`});
+  return `<g filter="url(#g5glow)" opacity=".75">${glow}</g>${core}`}
+function g5ball(x,y,r,c){return `<g><rect x="${(x-r*.28).toFixed(2)}" y="${(y-r*1.18).toFixed(2)}" width="${(r*.56).toFixed(2)}" height="${(r*.36).toFixed(2)}" rx=".1" fill="#c9a24a"/><circle cx="${x}" cy="${y}" r="${r}" fill="url(#g5${c})"/><ellipse cx="${(x-r*.35).toFixed(2)}" cy="${(y-r*.38).toFixed(2)}" rx="${(r*.28).toFixed(2)}" ry="${(r*.18).toFixed(2)}" fill="#fff" opacity=".7" transform="rotate(-35 ${(x-r*.35).toFixed(2)} ${(y-r*.38).toFixed(2)})"/></g>`}
+function g5bow(x,y,s,rot){return `<g transform="translate(${x} ${y}) rotate(${rot||0}) scale(${s})"><path d="M-.3 .4L-2.2 4.2-1.3 3.9-.9 4.9.4.6Z" fill="#8e1b1b"/><path d="M.3 .4L2.2 4.2 1.3 3.9.9 4.9-.4.6Z" fill="#a52020"/><path d="M0 0C-1.2-2.6-4.4-2.4-4-0.4-3.7 1.4-1.3 1.1 0 0Z" fill="url(#g5b)"/><path d="M0 0C1.2-2.6 4.4-2.4 4-0.4 3.7 1.4 1.3 1.1 0 0Z" fill="url(#g5b)"/><path d="M-.7-.1C-1.6-1.3-3-1.3-3.1-.4" stroke="#ff8a80" stroke-width=".25" fill="none" opacity=".7"/><ellipse cx="0" cy="0" rx=".75" ry=".65" fill="#b71c1c"/></g>`}
+function g5vinyl(x,y,r){let g='';for(let k=1;k<5;k++)g+=`<circle cx="${x}" cy="${y}" r="${(r*(.45+k*.12)).toFixed(2)}" fill="none" stroke="#3a3a3a" stroke-width=".12"/>`;
+  return `<g><circle cx="${x}" cy="${y}" r="${r}" fill="url(#g5v)"/>${g}<path d="M${x-r*.7} ${y-r*.35}A${r*.8} ${r*.8} 0 0 1 ${x-r*.1} ${y-r*.78}" stroke="#fff" stroke-width=".25" opacity=".18" fill="none"/><circle cx="${x}" cy="${y}" r="${(r*.33).toFixed(2)}" fill="#e9c46a"/><circle cx="${x}" cy="${y}" r="${(r*.07).toFixed(2)}" fill="#111"/></g>`}
+function g5bokeh(rnd,cnt,box){let s='';for(let i=0;i<cnt;i++){const x=box[0]+rnd()*(box[2]-box[0]),y=box[1]+rnd()*(box[3]-box[1]);s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(.8+rnd()*1.6).toFixed(2)}" fill="${rnd()<.7?'#ffb347':'#ff6f43'}" opacity="${(.12+rnd()*.18).toFixed(2)}"/>`}return `<g filter="url(#g5soft)">${s}</g>`}
+function garBack(n){const rnd=g5rng(n+500);let s=G5;
+  s+=g5bokeh(rnd,7,[6,14,54,40]);
+  const top=[];for(let x=-1;x<=61;x+=.55)top.push([x,2.4+Math.sin(x/9)*.6]);
+  s+=g5pine(top,rnd,2.6);
+  const tl=[];for(let x=3;x<=57;x+=4.2)tl.push([x,2.6+Math.sin(x/9)*.6]);s+=g5lights(tl,rnd,.34);
+  s+=g5ball(13,6.2,1.05,'r')+g5ball(47,6.4,1.05,'g')+g5ball(30,6.6,.95,'y')+g5bow(4.2,3.6,.6,-25)+g5bow(55.8,3.6,.6,25);
+  return s}
+
+const hashId=t=>{let h=0;for(const c of String(t))h=(h*31+c.charCodeAt(0))%100000;return h};
+function garland(){const rnd=g5rng(7);
+  const pts=[];for(let x=-2;x<=122;x+=.5)pts.push([x,4.6+Math.sin(x/11)*1.4]);
+  let body=g5pine(pts,rnd,3.4);const lp=[];for(let x=2;x<=118;x+=4.6)lp.push([x,5+Math.sin(x/11)*1.4]);body+=g5lights(lp,rnd,.42);
+  [[16,'r'],[38,'y'],[60,'g'],[82,'r'],[104,'y']].forEach(([x,c],i)=>{body+=g5ball(x,9.2+Math.sin(x/11)*1.4,1.35,c)});
+  body+=g5bow(4,4.2,.8,-20)+g5bow(116,4.2,.8,20)+g5bow(60,3.8,.75,0);
+  return `<svg viewBox="0 0 120 14" preserveAspectRatio="xMidYMin slice">${G5}${body}</svg>`}
+function theme(){const x=(LS('th')||'zwart')==='kerst';document.body.classList.toggle('xmas',x);
+  document.querySelector('meta[name=theme-color]').setAttribute('content',x?'#1c0c0f':'#000000');
+  if(x&&!$('gar').innerHTML){$('gar').innerHTML=garland();let sn='';for(let i=0;i<28;i++){const sz=2+Math.random()*4;sn+=`<i style="left:${(Math.random()*100).toFixed(1)}%;width:${sz.toFixed(1)}px;height:${sz.toFixed(1)}px;animation-duration:${(9+Math.random()*12).toFixed(1)}s;animation-delay:-${(Math.random()*20).toFixed(1)}s;opacity:${(.25+Math.random()*.5).toFixed(2)}"></i>`}$('snow').innerHTML=sn}}
 async function showCard(){
   let c=CARDS[cur],note='';
   if(!c){
@@ -189,7 +251,7 @@ async function showCard(){
       note='Gegevens van Spotify, het jaar kan van de heruitgave zijn.'}
     catch(e){c={artist:'Onbekend',title:'Kon gegevens niet ophalen',year:'?'}}}
   const a=c.act&&ACT[c.act];
-  $('card').innerHTML=`<div class="ar"><span>${esc(c.artist)}</span></div><div class="yr">${esc(c.year)}</div><div class="ti"><span>${esc(c.title)}</span></div>`+
+  $('card').innerHTML=`<svg class="deco" viewBox="0 0 60 60" aria-hidden="true">${garBack(hashId(cur))}</svg><div class="ar"><span>${esc(c.artist)}</span></div><div class="yr">${esc(c.year)}</div><div class="ti"><span>${esc(c.title)}</span></div>`+
     (a?`<div class="act"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${a.s}</svg></span><span class="al">${esc(a.l)}</span></div>`:'');
   $('cnote').textContent=note;show('s-card')}
 
@@ -220,10 +282,11 @@ async function startScan(){
 function stopScan(){scanning=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}try{wake&&wake.release()}catch(e){}wake=null}
 
 /* ---------- instellingen ---------- */
-function openSet(){stopScan();$('pm').value=MODE();pmUI();$('redir').textContent=REDIR;$('cid').value=LS('cid')||'';$('devn').textContent=LS('devname')||'automatisch (telefoon)';$('impn').textContent=Object.keys(CARDS).length?Object.keys(CARDS).length+' kaartjes geladen':'';show('s-set')}
+function openSet(){stopScan();$('pm').value=MODE();pmUI();$('th').value=LS('th')||'zwart';$('redir').textContent=REDIR;$('cid').value=LS('cid')||'';$('devn').textContent=LS('devname')||'automatisch (telefoon)';$('impn').textContent=Object.keys(CARDS).length?Object.keys(CARDS).length+' kaartjes geladen':'';show('s-set')}
 const PMH={web:'Hey DJ speelt de muziek zelf af via Spotify. De Spotify-app hoeft niet open te staan. Na het wisselen naar deze stand één keer opnieuw inloggen.',remote:'Hey DJ stuurt de Spotify-app op je telefoon aan. Werkt niet op elke telefoon, omdat Android Spotify op de achtergrond kan stilzetten.',app:'Na elke scan opent Spotify even met het liedje. Veeg terug naar Hey DJ en tik op Toon liedje.'};
 function pmUI(){$('pmh').textContent=PMH[$('pm').value];$('devw').hidden=$('pm').value!=='remote'}
 $('pm').onchange=()=>{SET('pm',$('pm').value);pmUI()};
+$('th').onchange=()=>{SET('th',$('th').value);theme()};
 $('gear').onclick=openSet;
 $('cp').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(REDIR);$('cp').textContent='gekopieerd'};
 $('login').onclick=login;
@@ -252,6 +315,7 @@ $('go1').onclick=()=>{full();wpActivate();startScan()};
 
 /* ---------- opstarten ---------- */
 (async()=>{
+  theme();
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
   const p=new URLSearchParams(location.search);
   if(p.get('code')){
