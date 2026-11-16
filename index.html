@@ -33,6 +33,10 @@ input[type=text]{width:100%;max-width:420px;font:1rem monospace;padding:12px;bor
 .card .act .ic svg{width:70%;height:70%}.card .act .al{flex:1;text-align:center}
 .note{margin-top:12px;color:#777;font-size:.85rem}
 .play{font-size:4rem;opacity:.25;margin-bottom:28px}
+.stack{display:flex;flex-direction:column;gap:12px;width:min(84vw,360px);margin-top:18px}.stack button{width:100%;font-size:1.25rem;padding:18px 20px;border-radius:18px}.stack button.big{font-size:1.5rem;padding:22px 20px}
+#msg.l{font-size:2rem;color:#ffd78a;font-family:Georgia,serif;font-style:italic;margin:6px 0 22px}
+.card{box-shadow:0 0 0 2px rgba(233,196,106,.75),0 0 0 6px rgba(233,196,106,.12),0 0 34px rgba(255,170,60,.28),0 14px 40px rgba(0,0,0,.7)!important}
+body.xmas{background:radial-gradient(circle at 50% 45%,#4a2226 0,#2a1215 55%,#160a0c 100%) fixed}
 #gar,#snow{display:none}
 body.xmas{background:radial-gradient(circle at 50% 45%,#3b1a1c 0,#1c0c0f 55%,#0c0507 100%) fixed}
 body.xmas #gar{display:block;position:fixed;top:0;left:0;right:0;height:min(16vw,90px);z-index:4;pointer-events:none}
@@ -46,7 +50,7 @@ body.xmas button{background:linear-gradient(#c62828,#8e1b1b);border:1px solid #e
 body.xmas button.g{background:rgba(255,255,255,.07);color:#ffd78a;border:1px solid rgba(255,215,138,.35);box-shadow:none}
 body.xmas .gear{background:none;border:0;box-shadow:none}
 body.xmas .play{opacity:.9;color:#ffd78a;text-shadow:0 0 18px rgba(255,170,60,.7)}
-body.xmas #msg{color:#e8d3b0}
+body.xmas #msg{color:#e8d3b0}body.xmas #msg.l{color:#ffd78a;text-shadow:0 0 14px rgba(255,170,60,.45)}
 body.xmas .scr{padding-top:max(20px,min(16vw,90px))}
 body.xmas #s-scan{padding-top:20px}
 body.xmas .set input[type=text],body.xmas .set select{background:#1a0d0f!important;border-color:#5a3a2a!important}
@@ -83,14 +87,14 @@ body.xmas .set input[type=text],body.xmas .set select{background:#1a0d0f!importa
 <section class="scr" id="s-go"><div class="play">♪</div><p style="color:#bbb;max-width:320px">Tik op Start om het spel te beginnen. Daarna kun je kaartjes scannen.</p><button class="big" id="go1">Start</button><div id="gom" style="color:#bbb;margin-top:16px;max-width:340px"></div></section>
 
 <section class="scr" id="s-play">
-<div class="play">♪</div><div id="msg"></div><div id="dbg" style="color:#bbb;font-size:.95rem;margin:-6px 0 16px;max-width:340px"></div>
-<button class="big" id="show">Toon liedje</button>
-<div class="row"><button class="g" id="pause">Pauze</button><button class="g" id="next">Volgend kaartje</button></div>
-<div class="row" id="fix" hidden><button class="g" id="spot">Start via Spotify-app</button><button class="g" id="retry">Opnieuw proberen</button></div>
+<div class="play">♪</div><div id="msg"></div><div id="dbg" hidden></div>
+<div class="stack"><button class="big" id="show">Toon liedje</button>
+<button class="g" id="pause">Pauze</button><button class="g" id="next">Volgend kaartje</button>
+<button class="g" id="retry" hidden>Opnieuw proberen</button></div>
 </section>
 
 <section class="scr" id="s-card"><div class="card" id="card"></div><div class="note" id="cnote"></div>
-<div class="row"><button class="g" id="pause2">Pauze</button><button id="next2">Volgend kaartje</button></div></section>
+<div class="stack"><button id="next2">Volgend kaartje</button><button class="g" id="pause2">Pauze</button></div></section>
 
 <script>
 const $=id=>document.getElementById(id);
@@ -109,7 +113,7 @@ let CARDS={};try{CARDS=JSON.parse(LS('cards')||'{}')}catch(e){}
 let cur=null,stream=null,scanning=false,wake=null;
 
 function show(id){document.querySelectorAll('.scr').forEach(s=>s.classList.toggle('on',s.id===id));$('gear').style.display=id==='s-set'?'none':'block'}
-function msg(t){$('msg').textContent=t||''}
+function msg(t,big){$('msg').textContent=t||'';$('msg').classList.toggle('l',!!big)}
 
 /* ---------- Spotify inloggen (PKCE) ---------- */
 const b64=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
@@ -185,13 +189,13 @@ async function playWeb(id){
   throw new Error('wpstil')}
 function dbg(){$('dbg').textContent=DBG?'Spotify meldt: speelt='+(DBG.playing?'ja':'nee')+', toestel='+(DBG.dev||'?')+', juist liedje='+(DBG.ok?'ja':'nee'):''}
 async function start(id){
-  cur=id;DBG=null;$('dbg').textContent='';show('s-play');$('fix').hidden=true;$('show').disabled=false;
-  if(MODE()==='app'){msg('Spotify opent even. Ga daarna terug naar Hey DJ (terugknop of veeg) en tik op Toon liedje.');$('fix').hidden=false;setTimeout(()=>{location.href='spotify:track:'+id+':play'},400);return}
+  cur=id;DBG=null;$('dbg').textContent='';show('s-play');$('retry').hidden=true;$('show').disabled=false;
+  if(MODE()==='app'){msg('Spotify opent even. Ga daarna terug naar Hey DJ (terugknop of veeg) en tik op Toon liedje.');$('retry').hidden=false;setTimeout(()=>{location.href='spotify:track:'+id+':play'},400);return}
   msg('Liedje wordt gestart…');
   try{try{wake=wake||await navigator.wakeLock?.request('screen')}catch(e){}
-    const dv=MODE()==='web'?await playWeb(id):await playTrack(id);msg('Luister goed… (speelt af op: '+dv.name+')');dbg()}
+    const dv=MODE()==='web'?await playWeb(id):await playTrack(id);msg('Luister goed…',1)}
   catch(e){
-    $('fix').hidden=false;dbg();
+    $('retry').hidden=false;dbg();
     if(e.message==='scope')msg('Voor afspelen in Hey DJ moet je één keer opnieuw inloggen (tandwiel rechtsboven → Inloggen met Spotify).');
     else if(e.message==='wp')msg('De Spotify-speler in Hey DJ start niet op dit toestel'+(WPERR?' ('+WPERR+')':'')+'. Kies bij het tandwiel een andere manier van afspelen.');
     else if(e.message==='wpstil')msg('Het liedje is gestuurd maar speelt nog niet. Tik op Opnieuw proberen.');
@@ -304,7 +308,7 @@ $('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;
 $('show').onclick=()=>{full();showCard()};$('pause').onclick=pause;$('pause2').onclick=pause;
 function stopPlay(){try{if(MODE()==='web'){if(WP)WP.pause().catch(()=>{})}else if(MODE()==='remote')api('/me/player/pause',{method:'PUT'}).catch(()=>{})}catch(e){}}
 $('next').onclick=()=>{full();stopPlay();wpActivate();startScan()};$('next2').onclick=()=>{full();stopPlay();wpActivate();startScan()};
-$('retry').onclick=()=>{wpActivate();start(cur)};$('spot').onclick=()=>{location.href='spotify:track:'+cur+':play'};
+$('retry').onclick=()=>{wpActivate();start(cur)};
 
 /* ---------- startscherm: één tik nodig zodat de browser geluid mag afspelen ---------- */
 function begin(){if(MODE()!=='web'){startScan();return}
