@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="nl"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#000000"><title>Hey DJ</title>
+<meta name="theme-color" content="#000000"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><title>Hey DJ</title>
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -136,7 +136,7 @@ async function playTrack(id){
 async function pause(){try{if(MODE()==='web'&&WP){await WP.togglePlay();const st=await WP.getCurrentState();msg(st&&st.paused?'Gepauzeerd':'Speelt weer');return}await api('/me/player/pause',{method:'PUT'});msg('Gepauzeerd')}catch(e){}}
 
 /* ---------- afspelen in Hey DJ zelf (Spotify Web Playback SDK) ---------- */
-const MODE=()=>LS('pm')||(LS('mode')==='app'?'app':'web');
+const MODE=()=>LS('pm')||'web';
 let WP=null,WPID=null,WPERR=null,WPACT=false,WPREADY=null;
 async function freshTok(){if(Date.now()>+LS('exp')&&LS('rt'))await refresh();return LS('at')}
 function wpInit(){if(WPREADY)return WPREADY;
@@ -238,15 +238,17 @@ $('imp').onclick=()=>$('file').click();
 $('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;
   try{const j=JSON.parse(await f.text());CARDS=j.cards||j;SET('cards',JSON.stringify(CARDS));$('impn').textContent=Object.keys(CARDS).length+' kaartjes geladen'}
   catch(err){alert('Dit bestand kan ik niet lezen.')}};
-$('show').onclick=showCard;$('pause').onclick=pause;$('pause2').onclick=pause;
-$('next').onclick=()=>{wpActivate();startScan()};$('next2').onclick=()=>{wpActivate();startScan()};
+$('show').onclick=()=>{full();showCard()};$('pause').onclick=pause;$('pause2').onclick=pause;
+function stopPlay(){try{if(MODE()==='web'){if(WP)WP.pause().catch(()=>{})}else if(MODE()==='remote')api('/me/player/pause',{method:'PUT'}).catch(()=>{})}catch(e){}}
+$('next').onclick=()=>{full();stopPlay();wpActivate();startScan()};$('next2').onclick=()=>{full();stopPlay();wpActivate();startScan()};
 $('retry').onclick=()=>{wpActivate();start(cur)};$('spot').onclick=()=>{location.href='spotify:track:'+cur+':play'};
 
 /* ---------- startscherm: één tik nodig zodat de browser geluid mag afspelen ---------- */
 function begin(){if(MODE()!=='web'){startScan();return}
   stopScan();show('s-go');$('gom').textContent='';if(LS('scv')!=='2')$('gom').textContent='Let op: log eerst één keer opnieuw in via het tandwiel, zodat Hey DJ zelf mag afspelen.';
   wpInit().then(ok=>{if(!ok)$('gom').textContent='De Spotify-speler start niet op dit toestel'+(WPERR?' ('+WPERR+')':'')+'. Kies bij het tandwiel een andere manier van afspelen.'})}
-$('go1').onclick=()=>{wpActivate();startScan()};
+function full(){try{const d=document.documentElement;if(!document.fullscreenElement&&d.requestFullscreen)d.requestFullscreen({navigationUI:'hide'}).catch(()=>{})}catch(e){}}
+$('go1').onclick=()=>{full();wpActivate();startScan()};
 
 /* ---------- opstarten ---------- */
 (async()=>{
