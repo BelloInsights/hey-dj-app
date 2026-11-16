@@ -39,19 +39,19 @@ input[type=text]{width:100%;max-width:420px;font:1rem monospace;padding:12px;bor
 body.xmas{background:radial-gradient(circle at 50% 45%,#4a2226 0,#2a1215 55%,#160a0c 100%) fixed}
 #gar,#snow{display:none}
 body.xmas{background:radial-gradient(circle at 50% 45%,#3b1a1c 0,#1c0c0f 55%,#0c0507 100%) fixed}
-body.xmas #gar{display:block;position:fixed;top:calc(max(env(safe-area-inset-top,0px),26px) + 14px);left:0;right:0;height:min(16vw,90px);z-index:4;pointer-events:none}
+body.xmas #gar{display:block;position:fixed;top:calc(max(env(safe-area-inset-top,0px),18px) + var(--go,0px));left:0;right:0;height:min(16vw,90px);z-index:4;pointer-events:none}
 body.xmas #gar svg{width:100%;height:100%}
 body.xmas #snow{display:block;position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
 #snow i{position:absolute;top:-10px;width:5px;height:5px;border-radius:50%;background:#fff;opacity:.55;animation:fall linear infinite}
 @keyframes fall{to{transform:translateY(110vh) translateX(30px)}}
 @media (prefers-reduced-motion:reduce){#snow i{animation:none;display:none}}
-body.xmas .gear{color:#ffd78a;top:calc(max(env(safe-area-inset-top,0px),26px) + min(16vw,90px) + 10px)}
+body.xmas .gear{color:#ffd78a;top:calc(max(env(safe-area-inset-top,0px),18px) + var(--go,0px) + min(16vw,90px) + 10px)}
 body.xmas button{background:linear-gradient(#c62828,#8e1b1b);border:1px solid #e9c46a;box-shadow:0 0 14px rgba(255,170,60,.25)}
 body.xmas button.g{background:rgba(255,255,255,.07);color:#ffd78a;border:1px solid rgba(255,215,138,.35);box-shadow:none}
 body.xmas .gear{background:none;border:0;box-shadow:none}
 body.xmas .play{opacity:.9;color:#ffd78a;text-shadow:0 0 18px rgba(255,170,60,.7)}
 body.xmas #msg{color:#e8d3b0}body.xmas #msg.l{color:#ffd78a;text-shadow:0 0 14px rgba(255,170,60,.45)}
-body.xmas .scr{padding-top:calc(max(env(safe-area-inset-top,0px),26px) + min(16vw,90px) + 10px)}
+body.xmas .scr{padding-top:calc(max(env(safe-area-inset-top,0px),18px) + var(--go,0px) + min(16vw,90px) + 10px)}
 body.xmas #s-scan{padding-top:20px}
 body.xmas .set input[type=text],body.xmas .set select{background:#1a0d0f!important;border-color:#5a3a2a!important}
 </style></head><body>
@@ -78,6 +78,7 @@ body.xmas .set input[type=text],body.xmas .set select{background:#1a0d0f!importa
 <div id="pmh" style="color:#999;font-size:.9rem;margin-top:6px"></div>
 <label for="th">Thema</label>
 <select id="th" style="width:100%;max-width:420px;font:1rem system-ui;padding:12px;border-radius:10px;border:1px solid #444;background:#111;color:#fff"><option value="zwart">Zwart</option><option value="kerst">Kerst (slinger met lichtjes en sneeuw)</option></select>
+<div id="gow"><label for="go">Hoogte van de slinger (schuif tot het strikje vrij van de camera hangt)</label><input type="range" id="go" min="-40" max="80" step="2" style="width:100%;max-width:420px"></div>
 <div id="devw"><label>Afspeeltoestel</label><div class="row"><button class="g" id="devpick">Toestel kiezen…</button><span id="devn" style="align-self:center;color:#888"></span></div><div id="devl" class="row"></div></div>
 <div class="row"><button class="g" id="back">Terug</button><button class="g" id="out">Uitloggen</button></div>
 </div></section>
@@ -244,7 +245,7 @@ function garland(){const rnd=g5rng(7);
   [[16,'r'],[38,'y'],[60,'g'],[82,'r'],[104,'y']].forEach(([x,c],i)=>{body+=g5ball(x,9.2+Math.sin(x/11)*1.4,1.35,c)});
   body+=g5bow(4,4.2,.8,-20)+g5bow(116,4.2,.8,20)+g5bow(60,3.8,.75,0);
   return `<svg viewBox="0 0 120 14" preserveAspectRatio="xMidYMin slice">${G5}${body}</svg>`}
-function theme(){const x=(LS('th')||'zwart')==='kerst';document.body.classList.toggle('xmas',x);
+function theme(){const x=(LS('th')||'zwart')==='kerst';document.documentElement.style.setProperty('--go',(+LS('go')||0)+'px');if($('gow'))$('gow').hidden=!x;document.body.classList.toggle('xmas',x);
   document.querySelector('meta[name=theme-color]').setAttribute('content',x?'#1c0c0f':'#000000');
   if(x&&!$('gar').innerHTML){$('gar').innerHTML=garland();let sn='';for(let i=0;i<28;i++){const sz=2+Math.random()*4;sn+=`<i style="left:${(Math.random()*100).toFixed(1)}%;width:${sz.toFixed(1)}px;height:${sz.toFixed(1)}px;animation-duration:${(9+Math.random()*12).toFixed(1)}s;animation-delay:-${(Math.random()*20).toFixed(1)}s;opacity:${(.25+Math.random()*.5).toFixed(2)}"></i>`}$('snow').innerHTML=sn}}
 async function showCard(){
@@ -286,11 +287,12 @@ async function startScan(){
 function stopScan(){scanning=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}try{wake&&wake.release()}catch(e){}wake=null}
 
 /* ---------- instellingen ---------- */
-function openSet(){stopScan();$('pm').value=MODE();pmUI();$('th').value=LS('th')||'zwart';$('redir').textContent=REDIR;$('cid').value=LS('cid')||'';$('devn').textContent=LS('devname')||'automatisch (telefoon)';$('impn').textContent=Object.keys(CARDS).length?Object.keys(CARDS).length+' kaartjes geladen':'';show('s-set')}
+function openSet(){stopScan();$('pm').value=MODE();pmUI();$('th').value=LS('th')||'zwart';$('go').value=+LS('go')||0;$('redir').textContent=REDIR;$('cid').value=LS('cid')||'';$('devn').textContent=LS('devname')||'automatisch (telefoon)';$('impn').textContent=Object.keys(CARDS).length?Object.keys(CARDS).length+' kaartjes geladen'+(REPO?' ('+REPO+' uit cards.json)':''):'';show('s-set')}
 const PMH={web:'Hey DJ speelt de muziek zelf af via Spotify. De Spotify-app hoeft niet open te staan. Na het wisselen naar deze stand één keer opnieuw inloggen.',remote:'Hey DJ stuurt de Spotify-app op je telefoon aan. Werkt niet op elke telefoon, omdat Android Spotify op de achtergrond kan stilzetten.',app:'Na elke scan opent Spotify even met het liedje. Veeg terug naar Hey DJ en tik op Toon liedje.'};
 function pmUI(){$('pmh').textContent=PMH[$('pm').value];$('devw').hidden=$('pm').value!=='remote'}
 $('pm').onchange=()=>{SET('pm',$('pm').value);pmUI()};
 $('th').onchange=()=>{SET('th',$('th').value);theme()};
+$('go').oninput=()=>{SET('go',$('go').value);theme()};
 $('gear').onclick=openSet;
 $('cp').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(REDIR);$('cp').textContent='gekopieerd'};
 $('login').onclick=login;
@@ -318,9 +320,12 @@ function begin(){if(MODE()!=='web'){startScan();return}
 function full(){try{const d=document.documentElement;if(!document.fullscreenElement&&d.requestFullscreen)d.requestFullscreen({navigationUI:'hide'}).catch(()=>{})}catch(e){}}
 $('go1').onclick=()=>{full();wpActivate();startScan()};
 
+/* ---------- kaartgegevens uit cards.json naast de app (bijv. in je GitHub-repository) ---------- */
+let REPO=0;
+async function loadRepoCards(){try{const r=await fetch('cards.json',{cache:'no-cache'});if(!r.ok)return;const j=await r.json(),nw=j.cards||j;REPO=Object.keys(nw).length;CARDS={...CARDS,...nw}}catch(e){}}
 /* ---------- opstarten ---------- */
 (async()=>{
-  theme();
+  theme();loadRepoCards();
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
   const p=new URLSearchParams(location.search);
   if(p.get('code')){
