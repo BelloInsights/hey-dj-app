@@ -19,7 +19,7 @@ input[type=text]{width:100%;max-width:420px;font:1rem monospace;padding:12px;bor
 .set label{display:block;margin:16px 0 6px;color:#999;font-size:.9rem}.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
 #vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000}
 .frame{position:relative;width:min(66vw,300px);aspect-ratio:1;border:3px solid #ffe49a;border-radius:18px;box-shadow:0 0 0 100vmax rgba(0,0,0,.6)}
-#hint{position:absolute;bottom:12vh;left:0;right:0;color:#ddd;text-shadow:0 1px 4px #000}
+#s-go{text-align:center}#hint{position:absolute;bottom:12vh;left:0;right:0;color:#ddd;text-shadow:0 1px 4px #000}
 #msg{min-height:1.5em;color:#999;margin:18px 0;max-width:340px}
 .card{position:relative;width:min(88vw,62vh,420px);aspect-ratio:1;border-radius:4%;padding:7% 6%;display:flex;flex-direction:column;align-items:center;color:#fff;font-family:Georgia,serif;
  background:radial-gradient(circle at 50% 35%,#e04a4f 0,#b3202b 55%,#7c0f1b 100%);box-shadow:0 10px 40px rgba(0,0,0,.6)}
@@ -39,7 +39,7 @@ input[type=text]{width:100%;max-width:420px;font:1rem monospace;padding:12px;bor
 <h1>Hey DJ instellen</h1>
 <p>Eenmalig instellen, hierna werkt alles met één tik. Je hebt Spotify Premium nodig.</p>
 <ol>
-<li>Ga op <code>developer.spotify.com/dashboard</code> naar <b>Create app</b> (kies bij API: <i>Web API</i>).</li>
+<li>Ga op <code>developer.spotify.com/dashboard</code> naar <b>Create app</b> en vink bij de API's <i>Web API</i> én <i>Web Playback SDK</i> aan. (Bestaande app: Settings → Edit.)</li>
 <li>Zet bij <b>Redirect URI</b> precies dit adres: <code id="redir"></code> <button class="g" id="cp" style="padding:4px 10px;font-size:.85rem">kopieer</button></li>
 <li>Plak hieronder de <b>Client ID</b> van die app.</li></ol>
 <label for="cid">Client ID</label><input type="text" id="cid" autocomplete="off" autocapitalize="off" spellcheck="false">
@@ -47,12 +47,19 @@ input[type=text]{width:100%;max-width:420px;font:1rem monospace;padding:12px;bor
 <label>Kaartgegevens uit de kaartjes-maker (JSON, knop “Exporteren voor de app”)</label>
 <div class="row"><button class="g" id="imp">Bestand kiezen…</button><span id="impn" style="align-self:center;color:#888"></span></div>
 <input type="file" id="file" accept=".json,application/json" hidden>
-<label class="chk" style="display:flex;gap:10px;align-items:center;color:#ddd"><input type="checkbox" id="mode" style="width:22px;height:22px"> Liedjes altijd via de Spotify-app starten (aanrader als afspelen op de achtergrond niet lukt)</label>
-<label>Afspeeltoestel</label><div class="row"><button class="g" id="devpick">Toestel kiezen…</button><span id="devn" style="align-self:center;color:#888"></span></div><div id="devl" class="row"></div>
+<label for="pm">Hoe speelt Hey DJ de liedjes af?</label>
+<select id="pm" style="width:100%;max-width:420px;font:1rem system-ui;padding:12px;border-radius:10px;border:1px solid #444;background:#111;color:#fff">
+<option value="web">In Hey DJ zelf (aanrader, Spotify-app niet nodig)</option>
+<option value="remote">Spotify-app op de achtergrond bedienen</option>
+<option value="app">Via de Spotify-app starten (Spotify komt even in beeld)</option></select>
+<div id="pmh" style="color:#999;font-size:.9rem;margin-top:6px"></div>
+<div id="devw"><label>Afspeeltoestel</label><div class="row"><button class="g" id="devpick">Toestel kiezen…</button><span id="devn" style="align-self:center;color:#888"></span></div><div id="devl" class="row"></div></div>
 <div class="row"><button class="g" id="back">Terug</button><button class="g" id="out">Uitloggen</button></div>
 </div></section>
 
 <section class="scr" id="s-scan"><video id="vid" playsinline muted></video><div class="frame"></div><div id="hint">Houd de QR-code van het kaartje in het kader</div></section>
+
+<section class="scr" id="s-go"><div class="play">♪</div><p style="color:#bbb;max-width:320px">Tik op Start om het spel te beginnen. Daarna kun je kaartjes scannen.</p><button class="big" id="go1">Start</button><div id="gom" style="color:#bbb;margin-top:16px;max-width:340px"></div></section>
 
 <section class="scr" id="s-play">
 <div class="play">♪</div><div id="msg"></div><div id="dbg" style="color:#bbb;font-size:.95rem;margin:-6px 0 16px;max-width:340px"></div>
@@ -89,7 +96,7 @@ async function login(){
   const cid=$('cid').value.trim();if(!cid){alert('Vul eerst je Client ID in.');return}
   SET('cid',cid);const v=b64(crypto.getRandomValues(new Uint8Array(48)));SET('ver',v);
   const ch=b64(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v)));
-  location.href='https://accounts.spotify.com/authorize?'+new URLSearchParams({client_id:cid,response_type:'code',redirect_uri:REDIR,code_challenge_method:'S256',code_challenge:ch,scope:'user-read-playback-state user-modify-playback-state'})}
+  location.href='https://accounts.spotify.com/authorize?'+new URLSearchParams({client_id:cid,response_type:'code',redirect_uri:REDIR,code_challenge_method:'S256',code_challenge:ch,scope:'user-read-playback-state user-modify-playback-state streaming user-read-email user-read-private'})}
 async function tokenReq(body){
   const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({client_id:LS('cid'),...body})});
   if(!r.ok)throw new Error('token '+r.status);const j=await r.json();
@@ -126,17 +133,48 @@ async function playTrack(id){
     if(i===3){await api('/me/player',{method:'PUT',body:JSON.stringify({device_ids:[dev.id],play:true})});await wait(800);await go()}}
   DBG=st;
   throw new Error('stil')}
-async function pause(){try{await api('/me/player/pause',{method:'PUT'});msg('Gepauzeerd')}catch(e){}}
+async function pause(){try{if(MODE()==='web'&&WP){await WP.togglePlay();const st=await WP.getCurrentState();msg(st&&st.paused?'Gepauzeerd':'Speelt weer');return}await api('/me/player/pause',{method:'PUT'});msg('Gepauzeerd')}catch(e){}}
 
+/* ---------- afspelen in Hey DJ zelf (Spotify Web Playback SDK) ---------- */
+const MODE=()=>LS('pm')||(LS('mode')==='app'?'app':'web');
+let WP=null,WPID=null,WPERR=null,WPACT=false,WPREADY=null;
+async function freshTok(){if(Date.now()>+LS('exp')&&LS('rt'))await refresh();return LS('at')}
+function wpInit(){if(WPREADY)return WPREADY;
+  WPREADY=new Promise(res=>{
+    const make=()=>{WP=new Spotify.Player({name:'Hey DJ',volume:.9,getOAuthToken:cb=>{freshTok().then(cb).catch(()=>cb(''))}});
+      WP.addListener('ready',({device_id})=>{WPID=device_id;res(true)});
+      WP.addListener('not_ready',()=>{WPID=null});
+      ['initialization_error','authentication_error','account_error','playback_error'].forEach(t=>WP.addListener(t,({message})=>{WPERR=t+': '+message;if(t!=='playback_error')res(false)}));
+      WP.connect().then(ok=>{if(!ok){WPERR=WPERR||'connect';res(false)}})};
+    if(window.Spotify&&Spotify.Player)make();else{window.onSpotifyWebPlaybackSDKReady=make;
+      const sc=document.createElement('script');sc.src='https://sdk.scdn.co/spotify-player.js';sc.onerror=()=>{WPERR='script';res(false)};document.head.appendChild(sc)}
+    setTimeout(()=>{WPERR=WPERR||'timeout';res(!!WPID)},15000)});
+  return WPREADY}
+function wpActivate(){try{if(WP&&WP.activateElement){WP.activateElement();WPACT=true}}catch(e){}}
+async function playWeb(id){
+  if(LS('scv')!=='2')throw new Error('scope');
+  const ok=await wpInit();if(!ok||!WPID)throw new Error('wp');
+  let r=await api('/me/player/play?device_id='+encodeURIComponent(WPID),{method:'PUT',body:JSON.stringify({uris:['spotify:track:'+id]})});
+  if(r.status===404){await api('/me/player',{method:'PUT',body:JSON.stringify({device_ids:[WPID],play:false})});await wait(800);
+    r=await api('/me/player/play?device_id='+encodeURIComponent(WPID),{method:'PUT',body:JSON.stringify({uris:['spotify:track:'+id]})})}
+  if(!r.ok&&r.status!==204)throw new Error('play '+r.status);
+  for(let i=0;i<6;i++){await wait(700);const st=await WP.getCurrentState();
+    DBG={playing:!!st&&!st.paused,dev:'Hey DJ (deze telefoon)',ok:!!(st&&st.track_window&&st.track_window.current_track&&(st.track_window.current_track.id===id||(st.track_window.current_track.linked_from||{}).id===id))};
+    if(DBG.playing)return{name:'Hey DJ (deze telefoon)'};if(i===2)try{await WP.resume()}catch(e){}}
+  throw new Error('wpstil')}
 function dbg(){$('dbg').textContent=DBG?'Spotify meldt: speelt='+(DBG.playing?'ja':'nee')+', toestel='+(DBG.dev||'?')+', juist liedje='+(DBG.ok?'ja':'nee'):''}
 async function start(id){
   cur=id;DBG=null;$('dbg').textContent='';show('s-play');$('fix').hidden=true;$('show').disabled=false;
-  if(LS('mode')==='app'){msg('Spotify opent even. Ga daarna terug naar Hey DJ (terugknop of veeg) en tik op Toon liedje.');$('fix').hidden=false;setTimeout(()=>{location.href='spotify:track:'+id+':play'},400);return}
+  if(MODE()==='app'){msg('Spotify opent even. Ga daarna terug naar Hey DJ (terugknop of veeg) en tik op Toon liedje.');$('fix').hidden=false;setTimeout(()=>{location.href='spotify:track:'+id+':play'},400);return}
   msg('Liedje wordt gestart…');
-  try{const dv=await playTrack(id);msg('Luister goed… (speelt af op: '+dv.name+')');dbg()}
+  try{try{wake=wake||await navigator.wakeLock?.request('screen')}catch(e){}
+    const dv=MODE()==='web'?await playWeb(id):await playTrack(id);msg('Luister goed… (speelt af op: '+dv.name+')');dbg()}
   catch(e){
     $('fix').hidden=false;dbg();
-    if(e.message==='nodev')msg('Spotify is niet gevonden op dit toestel. Open Spotify (kort), kom terug en tik op Opnieuw proberen.');
+    if(e.message==='scope')msg('Voor afspelen in Hey DJ moet je één keer opnieuw inloggen (tandwiel rechtsboven → Inloggen met Spotify).');
+    else if(e.message==='wp')msg('De Spotify-speler in Hey DJ start niet op dit toestel'+(WPERR?' ('+WPERR+')':'')+'. Kies bij het tandwiel een andere manier van afspelen.');
+    else if(e.message==='wpstil')msg('Het liedje is gestuurd maar speelt nog niet. Tik op Opnieuw proberen.');
+    else if(e.message==='nodev')msg('Spotify is niet gevonden op dit toestel. Open Spotify (kort), kom terug en tik op Opnieuw proberen.');
     else if(e.message==='login'||/ 40[13]/.test(e.message))msg('Opnieuw inloggen is nodig (tandwiel rechtsboven).');
     else if(e.message==='stil')msg('Spotify start het liedje niet. Tik op Start via Spotify-app, of open Spotify, speel kort een nummer, ga terug en tik op Opnieuw proberen.');
     else if(/ 404/.test(e.message))msg('Spotify reageert niet. Open Spotify, speel kort een nummer, ga terug en tik op Opnieuw proberen.');
@@ -182,12 +220,14 @@ async function startScan(){
 function stopScan(){scanning=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}try{wake&&wake.release()}catch(e){}wake=null}
 
 /* ---------- instellingen ---------- */
-function openSet(){stopScan();$('redir').textContent=REDIR;$('cid').value=LS('cid')||'';$('devn').textContent=LS('devname')||'automatisch (telefoon)';$('impn').textContent=Object.keys(CARDS).length?Object.keys(CARDS).length+' kaartjes geladen':'';show('s-set')}
-$('mode').checked=LS('mode')==='app';$('mode').onchange=e=>SET('mode',e.target.checked?'app':null);
+function openSet(){stopScan();$('pm').value=MODE();pmUI();$('redir').textContent=REDIR;$('cid').value=LS('cid')||'';$('devn').textContent=LS('devname')||'automatisch (telefoon)';$('impn').textContent=Object.keys(CARDS).length?Object.keys(CARDS).length+' kaartjes geladen':'';show('s-set')}
+const PMH={web:'Hey DJ speelt de muziek zelf af via Spotify. De Spotify-app hoeft niet open te staan. Na het wisselen naar deze stand één keer opnieuw inloggen.',remote:'Hey DJ stuurt de Spotify-app op je telefoon aan. Werkt niet op elke telefoon, omdat Android Spotify op de achtergrond kan stilzetten.',app:'Na elke scan opent Spotify even met het liedje. Veeg terug naar Hey DJ en tik op Toon liedje.'};
+function pmUI(){$('pmh').textContent=PMH[$('pm').value];$('devw').hidden=$('pm').value!=='remote'}
+$('pm').onchange=()=>{SET('pm',$('pm').value);pmUI()};
 $('gear').onclick=openSet;
 $('cp').onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(REDIR);$('cp').textContent='gekopieerd'};
 $('login').onclick=login;
-$('back').onclick=()=>LS('at')?startScan():alert('Log eerst in met Spotify.');
+$('back').onclick=()=>LS('at')?begin():alert('Log eerst in met Spotify.');
 $('out').onclick=()=>{['at','rt','exp'].forEach(k=>SET(k,null));alert('Uitgelogd.')};
 $('devpick').onclick=async()=>{
   try{const r=await api('/me/player/devices');const d=(await r.json()).devices||[];const l=$('devl');l.innerHTML='';
@@ -199,8 +239,14 @@ $('file').onchange=async e=>{const f=e.target.files[0];if(!f)return;
   try{const j=JSON.parse(await f.text());CARDS=j.cards||j;SET('cards',JSON.stringify(CARDS));$('impn').textContent=Object.keys(CARDS).length+' kaartjes geladen'}
   catch(err){alert('Dit bestand kan ik niet lezen.')}};
 $('show').onclick=showCard;$('pause').onclick=pause;$('pause2').onclick=pause;
-$('next').onclick=startScan;$('next2').onclick=startScan;
-$('retry').onclick=()=>start(cur);$('spot').onclick=()=>{location.href='spotify:track:'+cur+':play'};
+$('next').onclick=()=>{wpActivate();startScan()};$('next2').onclick=()=>{wpActivate();startScan()};
+$('retry').onclick=()=>{wpActivate();start(cur)};$('spot').onclick=()=>{location.href='spotify:track:'+cur+':play'};
+
+/* ---------- startscherm: één tik nodig zodat de browser geluid mag afspelen ---------- */
+function begin(){if(MODE()!=='web'){startScan();return}
+  stopScan();show('s-go');$('gom').textContent='';if(LS('scv')!=='2')$('gom').textContent='Let op: log eerst één keer opnieuw in via het tandwiel, zodat Hey DJ zelf mag afspelen.';
+  wpInit().then(ok=>{if(!ok)$('gom').textContent='De Spotify-speler start niet op dit toestel'+(WPERR?' ('+WPERR+')':'')+'. Kies bij het tandwiel een andere manier van afspelen.'})}
+$('go1').onclick=()=>{wpActivate();startScan()};
 
 /* ---------- opstarten ---------- */
 (async()=>{
@@ -209,7 +255,7 @@ $('retry').onclick=()=>start(cur);$('spot').onclick=()=>{location.href='spotify:
   if(p.get('code')){
     try{await tokenReq({grant_type:'authorization_code',code:p.get('code'),redirect_uri:REDIR,code_verifier:LS('ver')})}
     catch(e){history.replaceState(null,'',REDIR);openSet();alert('Inloggen mislukt. Controleer de Client ID en de Redirect URI.');return}
-    history.replaceState(null,'',REDIR)}
+    SET('scv','2');history.replaceState(null,'',REDIR)}
   else if(p.get('error')){history.replaceState(null,'',REDIR);openSet();alert('Inloggen geannuleerd of geweigerd.');return}
-  LS('at')&&LS('cid')?startScan():openSet()})();
+  LS('at')&&LS('cid')?begin():openSet()})();
 </script></body></html>
